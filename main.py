@@ -65,6 +65,7 @@ class RequestForDatabase(BaseModel):
     message: str
 
 class AvailabilityCheckRequest(BaseModel):
+    """Schema for handling availability check requests with a message field."""
     message: str
       
 app = FastAPI()
@@ -232,7 +233,21 @@ def execute_and_report_with_db(request: RequestForDatabase =
 @app.post("/check-and-execute")
 def check_and_execute(request: AvailabilityCheckRequest =
                          Body(..., title="Availability_Check_Request")):
-    
+    """
+    Endpoint to check data availability and execute an SQL query if valid.
+
+    Steps:
+    1. Validates the input message.
+    2. Converts the message into an SQL query.
+    3. Checks if the query would return data.
+    4. Returns whether data exists.
+
+    Args:
+        request (AvailabilityCheckRequest): Request body containing the SQL query as a message.
+
+    Returns:
+        dict: A response indicating if data exists based on the query.
+    """
     message = request.message
 
     validation_error = validate_input(message)

@@ -476,10 +476,19 @@ sql_check_tools = [quick_check_sql_tool]
 
 def quick_check_sql(nlq_query: str) -> str:
     """
-    Given a natural language query, this function converts it into SQL, checks for data existence,
-    and then either executes the query (if data exists) or returns an informative message.
-    
-    It uses OpenAI tool calling to simulate the data existence check.
+    Converts a natural language query (NLQ) to SQL, checks data availability, and returns a response.
+
+    Process:
+    1. Converts NLQ to SQL query.
+    2. Uses OpenAI tool calling to check if the SQL query returns data.
+    3. Executes the SQL query if data exists; otherwise, returns a message.
+    4. Optionally formats the response via another tool call.
+
+    Args:
+        nlq_query (str): Natural language query to be processed.
+
+    Returns:
+        str: Formatted response based on data existence.
     """
     # Step 1: Convert NLQ to SQL query.
     sql_query = convert_nlq_to_sql(nlq_query)
