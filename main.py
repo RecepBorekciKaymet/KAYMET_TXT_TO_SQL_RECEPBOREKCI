@@ -15,7 +15,8 @@ from fastapi import FastAPI, Body
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import db_utils
-from utils import convert_nlp_to_sql, execute_sql_query, generate_and_run_sql_query, execute_and_report_helper, execute_and_report_with_db_helper
+from utils import convert_nlq_to_sql, execute_sql_query, generate_and_run_sql_query, execute_and_report_helper, execute_and_report_with_db_helper, quick_check_sql
+
 
 
 class NLQRequest(BaseModel):
@@ -62,6 +63,10 @@ class FullRequest(BaseModel):
 class RequestForDatabase(BaseModel):
     session_id: str
     message: str
+
+class AvailabilityCheckRequest(BaseModel):
+    """Schema for handling availability check requests with a message field."""
+    message: str
       
 app = FastAPI()
 
@@ -106,7 +111,7 @@ def generate_sql(request: NLQRequest =
     if validation_error:
         return validation_error
 
-    sql_query = convert_nlp_to_sql(text)
+    sql_query = convert_nlq_to_sql(text)
 
     return {"sql_query": sql_query}
 
@@ -224,6 +229,35 @@ def execute_and_report_with_db(request: RequestForDatabase =
     results = execute_and_report_with_db_helper(message, session_id)
 
     return results
+
+@app.post("/check-and-execute")
+def check_and_execute(request: AvailabilityCheckRequest =
+                         Body(..., title="Availability_Check_Request")):
+    """
+    Endpoint to check data availability and execute an SQL query if valid.
+
+    Steps:
+    1. Validates the input message.
+    2. Converts the message into an SQL query.
+    3. Checks if the query would return data.
+    4. Returns whether data exists.
+
+    Args:
+        request (AvailabilityCheckRequest): Request body containing the SQL query as a message.
+
+    Returns:
+        dict: A response indicating if data exists based on the query.
+    """
+    message = request.message
+
+    validation_error = validate_input(message)
+    if validation_error:
+        return validation_error
+    
+    results = quick_check_sql(message)
+
+    return {"data_exist": results}
+
 
 @app.get("/chat_history/{session_id}")
 def get_chat_history(session_id: str) -> Dict[str, Any]:
